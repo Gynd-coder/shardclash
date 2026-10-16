@@ -1,0 +1,14 @@
+{
+  "name": "Shard Clash",
+  "short_name": "ShardClash",
+  "description": "Draft a squad, win three duels.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#14102a",
+  "theme_color": "#14102a",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
