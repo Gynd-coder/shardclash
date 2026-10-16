@@ -1,5 +1,5 @@
 // Shard Clash service worker: primero internet, y si no hay conexión usa la copia guardada
-const CACHE = "shardclash-v29";
+const CACHE = "shardclash-v31";
 const ASSETS = ["./", "index.html", "manifest.webmanifest", "icon.svg"];
 
 self.addEventListener("install", e => {
