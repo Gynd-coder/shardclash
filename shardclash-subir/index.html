@@ -613,6 +613,7 @@ function drawSoldier(c,type,team,x,y,face,walk,atk,scale=1){
 /* =====================================================================
    HÉROES (se eligen al empezar una partida contra la computadora)
    ===================================================================== */
+const HERO_DMG=2.8;   // 💥 daño de los héroes (súbelo para que peguen más)
 const HP_MULT=3.6;   // ❤️ vida extra para todos: las peleas duran más
 const HEROES={
   pig:{name:"Bodo",hp:420,atk:15,def:7,spd:32,range:16,rate:.9,btn:"LIBRO",cd0:7,cdMax:20,
@@ -865,21 +866,21 @@ function heroImg(id){
 }
 function makeHero(id,side){
   const h=HEROES[id], hp=h.hp*HP_MULT*1.6;
-  return {type:"hero_"+id,heroId:id,side,hp,maxHp:hp,atk:h.atk*1.6,def:h.def+6,spd:h.spd,range:h.range,rate:h.rate,
+  return {type:"hero_"+id,heroId:id,side,hp,maxHp:hp,atk:h.atk*HERO_DMG,def:h.def+6,spd:h.spd,range:h.range,rate:h.rate,
     heal:0,count:1,crit:0,steal:0,stun:0,burn:0,regen:0,multi:0,thorns:0,splash:0,proj:null,
     pigHero:id==="pig",guard:id==="guard",sumCd:3,weapon:null,cardsT:0,buffT:0,slowT:0,
     r:10,cd:.5,alive:true,fade:1,walk:0,atkA:0,hitT:0,stunT:0,burnT:0,burnDps:0,confT:0,
     face:side==="P"?1:-1,x:W/2,y:side==="P"?H/2+128:H/2-128};
 }
 function makePiglet(h,dx){
-  const hp=75*HP_MULT;
-  return {type:"piglet",side:h.side,hp,maxHp:hp,atk:3,def:4,spd:48,range:10,rate:.9,
+  const hp=160*HP_MULT;
+  return {type:"piglet",side:h.side,hp,maxHp:hp,atk:10,def:7,spd:50,range:10,rate:.8,
     heal:0,count:1,crit:0,steal:0,stun:0,burn:0,regen:0,multi:0,thorns:0,splash:0,proj:null,
     r:8,cd:.3,alive:true,fade:1,walk:rand(0,6),atkA:0,hitT:0,stunT:0,burnT:0,burnDps:0,confT:0,
     face:h.face,x:Math.max(32,Math.min(W-32,h.x+dx)),y:h.y+rand(-4,4),giant:false};
 }
 // Cuando Bodo se queda sin aliados, sus cerditos se vuelven gigantes: fuertes y rápidos, pero frágiles
-function giantify(p){ if(p.giant) return; p.giant=true; p.atk=15; p.spd=86; p.rate=.55; p.range=14; p.r=12; p.maxHp=p.hp=170; }
+function giantify(p){ if(p.giant) return; p.giant=true; p.atk=30; p.spd=86; p.rate=.5; p.range=14; p.r=12; p.maxHp=p.hp=900; }
 
 /* ---------- Fotos de los héroes para la presentación VS ----------
    Pon art/vs-<héroe>.png (pig, guard, portal, waos, rosa). El fondo liso se quita solo:
@@ -1355,7 +1356,7 @@ function updateHeroBtn(){
   const H2=HEROES[h.heroId], ab2=b.ab2?.[mySide()], sec=$("btnSec"), wp=$("btnWpn");
   sec.hidden=!H2.btn2||!h.alive;
   if(H2.btn2&&ab2){ const t2=aiming2?"¡APUNTA!":ab2.cd>0?`${H2.btn2} ${Math.ceil(ab2.cd)}`:H2.btn2; if(sec.textContent!==t2) sec.textContent=t2; sec.classList.toggle("off",ab2.cd>0); }
-  const nearW=h.alive&&(b.drops||[]).some(d=>Math.hypot(d.x-h.x,d.y-h.y)<28);
+  const nearW=h.alive&&(b.drops||[]).some(d=>Math.hypot(d.x-h.x,d.y-h.y)<PICK_R);
   wp.hidden=!(nearW||h.weapon); const tw=nearW?"RECOGER":"SOLTAR"; if(wp.textContent!==tw) wp.textContent=tw;
 }
 $("btnHero").addEventListener("click",()=>{ const h=myHero(); if(h?.charging&&!usingMouse){ aiming=true; banner("Toca dónde soltarlo",1200); } },true);
@@ -1566,6 +1567,7 @@ const WEAPONS={
   canon:   {name:"Mini cañón",       range:185,rate:2.2,mult:3.4, proj:"ball", splash:42},
   baculo:  {name:"Báculo sagrado",   range:125,rate:.9, mult:.8,  proj:"light", lifesteal:.03},
 };
+const PICK_R=48;   // distancia para recoger un arma
 const TROOP_W={sword:"espada",spear:"lanza",archer:"arco",xbow:"ballesta",mage:"baston",shield:"escudo",knight:"justa",cannon:"canon",healer:"baculo"};
 const SHOT_SPD={arrow:290,bolt:340,ball:170,fire:210,heal:220,light:220,pig:190,wave:250,card:320,pearl:260};
 function shoot(u,kind,tx,ty,target,o={}){
@@ -1597,7 +1599,7 @@ function heroAttack(u,t,pt,charge){
           if(al>0&&al<L+10&&Math.abs(vx*dy-vy*dx)<f.r+8&&al<bd){ bd=al; best=f; } }
         tg=best; (b.fx=b.fx||[]).push({kind:"eyelaser",x1:ox,y1:oy,x2:tg?tg.x:e.x,y2:tg?tg.y-12:e.y-10,t:0}); }
       else b.fx=(b.fx||[]),b.fx.push({kind:"eyelaser",x1:ox,y1:oy,x2:tg.x,y2:tg.y-12,t:0});
-      if(tg) hit(u,tg,1.5,false); break; }
+      if(tg) hit(u,tg,2.3,false); break; }
     case "waos": { const a=aimAt();                                                 // onda de guitarra (cargada = más fuerte)
       shoot(u,"wave",a.x,a.y,a.tg,{mult:1+2.2*charge,size:1+1.6*charge,splash:charge>.5?20+34*charge:0,knock:charge*26}); break; }
     case "rosa": { const a=aimAt();
@@ -1618,7 +1620,7 @@ function equip(u,key){
 }
 function swapWeapon(h){
   const b=S.battle; b.drops=b.drops||[];
-  let near=null,bd=28; for(const d of b.drops){ const dd=Math.hypot(d.x-h.x,d.y-h.y); if(dd<bd){bd=dd; near=d;} }
+  let near=null,bd=PICK_R; for(const d of b.drops){ const dd=Math.hypot(d.x-h.x,d.y-h.y); if(dd<bd){bd=dd; near=d;} }
   if(near){ b.drops.splice(b.drops.indexOf(near),1);
     if(h.weapon) b.drops.push({x:h.x+12,y:h.y,w:h.weapon,t:0});
     equip(h,near.w); floatText(h.x,h.y-70,WEAPONS[near.w].name,"#ffd84a"); sparks(h.x,h.y-20,"#ffd84a",8); }
@@ -1641,10 +1643,10 @@ function finishCut(){
   if(c.kind==="cards"){ h.cardsT=30; banner("¡CARTAS DE BALATRO!",1300); b.cheer=1; }
   else { h.charging={t:0,max:8}; h.moveTo=null; banner("¡Apunta y suelta!",1200); }   // empieza a cargar
 }
-// Suelta la carga de Midalav: cono rojo gigante; daño 18%–40% de la vida máxima según lo que cargó
+// Suelta la carga de Midalav: cono rojo gigante; daño 40%–75% de la vida máxima según lo que cargó
 function releaseBeam(h,pt){
   const b=S.battle, ch=h.charging; h.charging=null; if(!h.alive) return;
-  const k=Math.min(1,ch.t/5), pct=.18+.22*k, ox=h.x, oy=h.y-40;
+  const k=Math.min(1,ch.t/5), pct=.4+.35*k, ox=h.x, oy=h.y-40;
   if(!pt){ const f=nearest(h,foesOf(h)); pt=f?{x:f.x,y:f.y}:{x:h.x,y:h.side==="P"?60:H-60}; }
   const ang=Math.atan2(pt.y-10-oy,pt.x-ox), half=.42+.18*k;
   (b.beams=b.beams||[]).push({x:ox,y:oy,ang,half,t:0,dur:BEAM_DUR,src:h,pct,sustain:true});
@@ -2084,7 +2086,10 @@ function render(){
     ctx.beginPath(); ctx.moveTo(mh.x,fy(mh.y,0)); ctx.lineTo(mh.moveTo.x,fy(mh.moveTo.y,0)); ctx.stroke(); ctx.setLineDash([]); }
   for(const d of b.drops||[]){ if(d.t>20&&Math.sin(d.t*14)>0) continue;                // armas tiradas (parpadean antes de desaparecer)
     const yy=fy(d.y,0); ctx.fillStyle="#ffd84a33"; ctx.beginPath(); ctx.ellipse(d.x,yy,10,4,0,0,7); ctx.fill();
-    drawWeaponIcon(ctx,d.w,d.x,yy-8+Math.sin(b.t*4+d.x)*2,1.1); }
+    drawWeaponIcon(ctx,d.w,d.x,yy-8+Math.sin(b.t*4+d.x)*2,1.1);
+    const mh2=myHero(); if(mh2?.alive&&Math.hypot(d.x-mh2.x,d.y-mh2.y)<PICK_R){                    // aviso para recogerla
+      ctx.save(); ctx.font="900 9px 'Trebuchet MS',sans-serif"; ctx.textAlign="center"; const tx=(usingMouse?"[G] ":"")+WEAPONS[d.w].name;
+      ctx.lineWidth=3; ctx.strokeStyle=OUT; ctx.strokeText(tx,d.x,yy-24); ctx.fillStyle="#ffd84a"; ctx.fillText(tx,d.x,yy-24); ctx.restore(); } }
   [...b.P,...b.E].map(viewUnit).sort((a,c)=>a.y-c.y).forEach(drawUnit);
   for(const u of [...b.P,...b.E]) if(u.heroId&&u.alive&&u.weapon) drawWeaponIcon(ctx,u.weapon,u.x+u.face*15,fy(u.y,0)-26,.95);
   for(const r of b.beams||[]){ const D=r.dur||1.1, k=Math.min(1,(D-r.t)/.4)*(r.sustain?.85+Math.sin(b.t*30)*.15:1), ox=r.x, oy=fy(r.y,0), ang=F?Math.atan2(-Math.sin(r.ang),Math.cos(r.ang)):r.ang, hf=r.half||.05;   // cono de energía
